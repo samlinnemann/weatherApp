@@ -4,9 +4,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- stylesheets -->
-    <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="css/index.css">
-    <link rel="stylesheet" href="css/classes.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/classes.css">
 </head>
 <body>
     <div id="container">
@@ -14,9 +14,30 @@
             <p>Weather App</p>
         </div>
         <nav>
-            <a href="html/index.html">Weather</a>
-            <a href="html/future.html">Upcoming</a>
+            <a href="../html/index.html">Weather</a>
+            <a href="../html/future.html">Upcoming</a>
         </nav>
+
+        <!-- Location and unit(F/C) -->
+         <div id="weather-search">
+            <input type="text" id="locationInput" placeholder="Enter city or ZIP">
+            <button id="searchButton">Search</button>
+
+            <label for="unit">Unit:</label>
+            <select id="unit" name="unit">
+                <option value="metric">Celsius</option>
+                <option value="imperial">Fahrenheit</option>
+            </select>
+         </div>
+
+        <!-- Current and Hourly Weather-->
+         <div id="weather">Loading weather....</div>
+         <div id="hourly-weather">Loading hourly weather....</div>
+
     </div>
+
+    <!-- scripts -->
+     <script src="../currentWeather.js"></script>
+
 </body>
 </html>
