@@ -1,33 +1,16 @@
 const apiKey = "5BUP9BVLNS4KSTHFXQLP7F6DL";
-let unit = "imperial"; // Default unit (Fahrenheit)
+let unit = "imperial"; // Default to Fahrenheit
 let userLocation = "";
 
-// Automatically get user location
-function getUserLocation() {
-    if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-            position => {
-                const { latitude, longitude } = position.coords;
-                userLocation = `${latitude},${longitude}`;
-                fetchWeather();
-            },
-            error => {
-                console.warn("Geolocation error:", error.message);
-                userLocation = "New York"; // Fallback location
-                fetchWeather();
-            }
-        );
-    } else {
-        console.warn("Geolocation not supported.");
-        userLocation = "New York"; // Default location
-        fetchWeather();
+// Fetch weather, alerts, and forecasts
+function fetchWeatherAndAlerts() {
+    if (!userLocation) {
+        console.error("No location provided!");
+        return;
     }
-}
 
-// Fetch weather data
-function fetchWeather() {
     const unitGroup = unit === "imperial" ? "us" : "metric";
-    const apiUrl = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${encodeURIComponent(userLocation)}?unitGroup=${unitGroup}&include=current,hours,days&key=${apiKey}&contentType=json`;
+    const apiUrl = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${encodeURIComponent(userLocation)}?unitGroup=${unitGroup}&include=events,current,hours,days&key=${apiKey}&contentType=json`;
 
     fetch(apiUrl)
         .then(response => {
@@ -35,28 +18,36 @@ function fetchWeather() {
             return response.json();
         })
         .then(data => {
-            displayCurrentWeather(data);
+            displayWeather(data);
             displayHourlyForecast(data);
-            displayDailyForecast(data);
+            displayWeatherAlerts(data);
+            display14DayForecast(data);
         })
         .catch(err => {
             console.error("Error fetching weather data:", err);
-            document.getElementById("weather").innerHTML = "<p>Failed to load weather data.</p>";
         });
 }
 
 // Display current weather
-function displayCurrentWeather(data) {
+function displayWeather(data) {
+    const weatherContainer = document.getElementById("weather");
     const { address, currentConditions } = data;
-    const tempUnit = unit === "imperial" ? "°F" : "°C";
 
-    document.getElementById("weather").innerHTML = `
+    if (!currentConditions) {
+        weatherContainer.innerHTML = "<p>Error: No weather data available.</p>";
+        return;
+    }
+
+    const tempUnit = unit === "imperial" ? "°F" : "°C";
+    const windUnit = unit === "imperial" ? "mph" : "km/h";
+
+    weatherContainer.innerHTML = `
         <h2>Weather in ${address}</h2>
-        <img class="weather-icon" src="https://raw.githubusercontent.com/visualcrossing/WeatherIcons/main/PNG/3rd%20Set%20-%20Color/${currentConditions.icon}.png" alt="${currentConditions.conditions}">
         <p><strong>Temperature:</strong> ${currentConditions.temp}${tempUnit}</p>
         <p><strong>Condition:</strong> ${currentConditions.conditions}</p>
         <p><strong>Humidity:</strong> ${currentConditions.humidity}%</p>
-        <p><strong>Wind Speed:</strong> ${currentConditions.windspeed} ${unit === "imperial" ? "mph" : "km/h"}</p>
+        <p><strong>Wind Speed:</strong> ${currentConditions.windspeed} ${windUnit}</p>
+        <hr>
     `;
 }
 
@@ -65,55 +56,98 @@ function displayHourlyForecast(data) {
     const hourlyContainer = document.getElementById("hourly-weather");
     const { days } = data;
     const tempUnit = unit === "imperial" ? "°F" : "°C";
-    const todayHours = days[0].hours;
+
     const currentHour = new Date().getHours();
+    const todayHours = days[0].hours;
+
+    const startIndex = todayHours.findIndex(hour => {
+        return parseInt(hour.datetime.split(":")[0]) >= currentHour;
+    });
 
     let hourlyHTML = `<h3>Hourly Forecast</h3>`;
-    
-    // Get the next 7 hours from the current time
-    todayHours.slice(currentHour, currentHour + 7).forEach(hour => {
-        const hourTime = parseInt(hour.datetime.split(":")[0]);
-        const period = hourTime >= 12 ? "PM" : "AM";
-        const formattedHour = hourTime % 12 || 12;
+
+    for (let i = startIndex; i < startIndex + 7 && i < todayHours.length; i++) {
+        const hour = todayHours[i];
+        const time24 = parseInt(hour.datetime.split(":")[0]);
+
+        const period = time24 >= 12 ? "PM" : "AM";
+        const time12 = time24 % 12 || 12;
 
         hourlyHTML += `
-            <div class="hourly-item">
-                <span><strong>${formattedHour}:00 ${period}</strong></span>
-                <img class="weather-icon" src="https://raw.githubusercontent.com/visualcrossing/WeatherIcons/main/PNG/3rd%20Set%20-%20Color/${hour.icon}.png" alt="${hour.conditions}">
-                <span>${hour.temp}${tempUnit} - ${hour.conditions}</span>
-            </div>
+            <p><strong>${time12}:00 ${period}</strong>: ${hour.temp}${tempUnit}, ${hour.conditions} <img src="https://raw.githubusercontent.com/visualcrossing/WeatherIcons/main/PNG/1st%20Set%20-%20Color/${hour.icon}.png" alt="Weather icon"></p>
         `;
-    });
+    }
 
     hourlyContainer.innerHTML = hourlyHTML;
 }
 
-// Display daily forecast
-function displayDailyForecast(data) {
-    const forecastContainer = document.getElementById("forecast");
+// Display weather alerts
+function displayWeatherAlerts(data) {
+    const alertsContainer = document.getElementById("alerts");
+    const { events } = data;
+
+    if (events && events.length > 0) {
+        const alertsHTML = events.map(event => `
+            <p><strong>Weather Alert:</strong> ${event.eventType}</p>
+            <p>${event.description}</p>
+        `).join('');
+        alertsContainer.innerHTML = alertsHTML;
+    } else {
+        alertsContainer.innerHTML = "<p>No active weather alerts.</p>";
+    }
+}
+
+// Display 14-day forecast
+function display14DayForecast(data) {
+    const forecastContainer = document.getElementById("forecast-14day");
     const { days } = data;
     const tempUnit = unit === "imperial" ? "°F" : "°C";
 
-    let forecastHTML = `<h3>7-Day Forecast</h3>`;
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const options = { weekday: 'long', month: 'short', day: 'numeric' };
+        return date.toLocaleDateString('en-US', options);
+    }
 
-    days.forEach(day => {
+    let forecastHTML = `<h3>14-Day Forecast</h3>`;
+    days.slice(0, 14).forEach(day => {
+        const formattedDate = formatDate(day.datetime);
         forecastHTML += `
-            <div class="daily-item">
-                <span><strong>${new Date(day.datetime).toLocaleDateString('en-US', { weekday: 'long' })}</strong></span>
-                <img class="weather-icon" src="https://raw.githubusercontent.com/visualcrossing/WeatherIcons/main/PNG/3rd%20Set%20-%20Color/${day.icon}.png" alt="${day.conditions}">
-                <span>${day.temp}${tempUnit} - ${day.conditions}</span>
-            </div>
+            <p><strong>${formattedDate}</strong>: ${day.temp}${tempUnit}, ${day.conditions} <img src="https://raw.githubusercontent.com/visualcrossing/WeatherIcons/main/PNG/1st%20Set%20-%20Color/${day.icon}.png" alt="Weather icon"></p>
         `;
     });
 
     forecastContainer.innerHTML = forecastHTML;
 }
 
-// Change temperature unit
-function changeUnit(newUnit) {
-    unit = newUnit;
-    fetchWeather();
+// Get user location automatically
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                userLocation = `${latitude},${longitude}`;
+                fetchWeatherAndAlerts();
+            },
+            error => {
+                console.error("Geolocation error:", error);
+                userLocation = "Virginia";
+                fetchWeatherAndAlerts();
+            }
+        );
+    } else {
+        console.error("Geolocation is not supported by this browser.");
+        userLocation = "Virginia";
+        fetchWeatherAndAlerts();
+    }
 }
 
-// Fetch weather on page load
-getUserLocation();
+// Change unit and refresh data
+function changeUnit(newUnit) {
+    unit = newUnit;
+    fetchWeatherAndAlerts();
+}
+
+// Fetch initial data on page load
+getLocation();
