@@ -4,9 +4,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- stylesheets -->
-    <link rel="stylesheet" href="css/global.css">
-    <link rel="stylesheet" href="css/index.css">
-    <link rel="stylesheet" href="css/classes.css">
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/classes.css">
 </head>
 <body>
     <div id="container">
@@ -18,23 +18,20 @@
             <a href="html/future.html">Upcoming</a>
         </nav>
 
-        <!-- Search and unit selection -->
+        <!-- Unit selection -->
         <div id="weather-search">
-            <input type="text" id="locationInput" placeholder="Enter city or ZIP">
-            <button onclick="searchWeather()">Search</button>
-
             <label for="unitSelect">Unit:</label>
             <select id="unitSelect" onchange="changeUnit(this.value)">
                 <option value="metric">Celsius (°C)</option>
-                <option value="imperial">Fahrenheit (°F)</option>
+                <option value="imperial" selected>Fahrenheit (°F)</option>
             </select>
         </div>
 
         <!-- 7-Day Forecast -->
-        <div id="forecast">Loading forecast...</div>
+        <div id="forecast"></div>
     </div>
 
     <!-- Link to future weather JS file -->
-    <script src="futureWeather.js"></script>
+    <script src="../futureWeather.js"></script>
 </body>
 </html>
