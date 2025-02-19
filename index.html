@@ -4,28 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather App</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="classes.css">
+    <script defer src="script.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 </head>
 <body>
-
     <div class="container">
-        <h2>Weather App</h2>
-        <div class="unit-selector">
-            <button onclick="changeUnit('imperial')">°F</button>
-            <button onclick="changeUnit('metric')">°C</button>
+        <div id="weather-tab" class="tab-content active-tab">
+            <div id="currentWeather">
+                <div id="weather"></div>
+                <div id="alerts"></div>
+                <div class="unit-selector rmiddle">
+                    <button id="unit" onclick="changeUnit('imperial')">Imperial</button>
+                    <button id="unit" onclick="changeUnit('metric')">Metric</button>
+                </div>
+            </div>
+            <div id="hourly-weather"></div>
         </div>
-        <div id="alerts"></div>
-        <hr>
-        <div id="weather"></div>
-        <hr>
-        <div id="hourly-weather"></div>
-        <hr>
-        <div id="forecast"></div>
-        <hr>
-        <div id="forecast-14day"></div>
+
+        <div id="forecast-tab" class="tab-content">
+            <div id="forecast-14day"></div>
+        </div>
     </div>
 
-    <script src="script.js"></script>
-
+    <div id="bttmTab" class="bottom-tab">
+        <button id="tab" onclick="switchTab('weather-tab')">Current Weather</button>
+        <button id="tab" onclick="switchTab('forecast-tab')">5-Day Forecast</button>
+    </div>
 </body>
 </html>

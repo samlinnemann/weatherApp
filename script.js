@@ -1,4 +1,4 @@
-const apiKey = "5BUP9BVLNS4KSTHFXQLP7F6DL";
+const apiKey = "5462213d7eb72ccb030a840d435b574e";
 let unit = "imperial"; // Default to Fahrenheit
 let userLocation = "";
 
@@ -9,8 +9,8 @@ function fetchWeatherAndAlerts() {
         return;
     }
 
-    const unitGroup = unit === "imperial" ? "us" : "metric";
-    const apiUrl = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${encodeURIComponent(userLocation)}?unitGroup=${unitGroup}&include=events,current,hours,days&key=${apiKey}&contentType=json`;
+    const unitParam = unit === "imperial" ? "imperial" : "metric";
+    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(userLocation)}&units=${unitParam}&appid=${apiKey}`;
 
     fetch(apiUrl)
         .then(response => {
@@ -19,116 +19,149 @@ function fetchWeatherAndAlerts() {
         })
         .then(data => {
             displayWeather(data);
-            displayHourlyForecast(data);
-            displayWeatherAlerts(data);
-            display14DayForecast(data);
         })
         .catch(err => {
             console.error("Error fetching weather data:", err);
         });
+    
+    fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(userLocation)}&units=${unitParam}&appid=${apiKey}`)
+        .then(response => response.json())
+        .then(data => {
+            displayHourlyForecast(data);
+            display14DayForecast(data);
+        })
+        .catch(err => console.error("Error fetching forecast data:", err));
 }
 
 // Display current weather
 function displayWeather(data) {
     const weatherContainer = document.getElementById("weather");
-    const { address, currentConditions } = data;
-
-    if (!currentConditions) {
+    if (!data.main) {
         weatherContainer.innerHTML = "<p>Error: No weather data available.</p>";
         return;
     }
 
     const tempUnit = unit === "imperial" ? "°F" : "°C";
     const windUnit = unit === "imperial" ? "mph" : "km/h";
+    const description = data.weather[0].description;
+    const customIcon = getWeatherIcon(description); // Get custom icon based on description
 
     weatherContainer.innerHTML = `
-        <h2>Weather in ${address}</h2>
-        <p><strong>Temperature:</strong> ${currentConditions.temp}${tempUnit}</p>
-        <p><strong>Condition:</strong> ${currentConditions.conditions}</p>
-        <p><strong>Humidity:</strong> ${currentConditions.humidity}%</p>
-        <p><strong>Wind Speed:</strong> ${currentConditions.windspeed} ${windUnit}</p>
-        <hr>
+        <h1>Weather in ${data.name}</h1>
+        <img id="topIcon" src="${customIcon}" alt="${description}" />
+        <div>
+            <h1>${data.main.temp}${tempUnit}</h1>
+            <h2>${description}</h2>
+        </div>
+        <div class="rmiddle">
+            <h3><strong>Humidity:</strong> ${data.main.humidity}%</h3>
+            <h3><strong>Wind Speed:</strong> ${data.wind.speed} ${windUnit}</h3>
+        </div>
     `;
 }
 
-// Display hourly forecast
 function displayHourlyForecast(data) {
     const hourlyContainer = document.getElementById("hourly-weather");
-    const { days } = data;
     const tempUnit = unit === "imperial" ? "°F" : "°C";
+    const windUnit = unit === "imperial" ? "mph" : "km/h";
+    let hourlyHTML = `<h1>Hourly Forecast</h1>`;
 
-    const currentHour = new Date().getHours();
-    const todayHours = days[0].hours;
-
-    const startIndex = todayHours.findIndex(hour => {
-        return parseInt(hour.datetime.split(":")[0]) >= currentHour;
-    });
-
-    let hourlyHTML = `<h3>Hourly Forecast</h3>`;
-
-    for (let i = startIndex; i < startIndex + 7 && i < todayHours.length; i++) {
-        const hour = todayHours[i];
-        const time24 = parseInt(hour.datetime.split(":")[0]);
-
-        const period = time24 >= 12 ? "PM" : "AM";
-        const time12 = time24 % 12 || 12;
+    for (let i = 0; i < 9; i++) {
+        const hour = data.list[i];
+        const date = new Date(hour.dt_txt);
+        const time12 = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const description = hour.weather[0].description;
+        const customIcon = getWeatherIcon(description);  // Get custom icon
+        const percipitationIcon = getPrecipitationIcon(hour.main.temp);
+        const precipitation = hour.pop ? Math.round(hour.pop * 100) : 0;
+        const wind = hour.wind ? hour.wind.speed : 0;
 
         hourlyHTML += `
-            <p><strong>${time12}:00 ${period}</strong>: ${hour.temp}${tempUnit}, ${hour.conditions} <img src="https://raw.githubusercontent.com/visualcrossing/WeatherIcons/main/PNG/1st%20Set%20-%20Color/${hour.icon}.png" alt="Weather icon"></p>
+        <div id="hourly" class="left">
+            <div>
+                <p><strong>${time12}</strong>: ${hour.main.temp}${tempUnit}, ${description}</p>
+                <div class="left">
+                    <p class="left" id="precipitation"><strong><img id="precipIcon" src="${percipitationIcon}"></strong> ${precipitation}%</p>
+                    <p2><strong>Wind:</strong> ${wind} ${windUnit}</p2>
+                </div>
+            </div>
+            <img id="hourIcon" src="${customIcon}" alt="${description}" />
+        </div>
         `;
     }
 
     hourlyContainer.innerHTML = hourlyHTML;
 }
 
-// Display weather alerts
-function displayWeatherAlerts(data) {
-    const alertsContainer = document.getElementById("alerts");
-    const { events } = data;
 
-    if (events && events.length > 0) {
-        const alertsHTML = events.map(event => `
-            <p><strong>Weather Alert:</strong> ${event.eventType}</p>
-            <p>${event.description}</p>
-        `).join('');
-        alertsContainer.innerHTML = alertsHTML;
-    } else {
-        alertsContainer.innerHTML = "<p>No active weather alerts.</p>";
-    }
-}
-
-// Display 14-day forecast
 function display14DayForecast(data) {
     const forecastContainer = document.getElementById("forecast-14day");
-    const { days } = data;
     const tempUnit = unit === "imperial" ? "°F" : "°C";
+    const windUnit = unit === "imperial" ? "mph" : "km/h"; // Define wind unit
 
-    function formatDate(dateString) {
-        const date = new Date(dateString);
-        const options = { weekday: 'long', month: 'short', day: 'numeric' };
-        return date.toLocaleDateString('en-US', options);
-    }
+    let forecastHTML = `<h1>5-Day Forecast</h1>`;
+    
+    // Loop through data in 9-hour intervals (typically for every 3-hour forecast)
+    for (let i = 0; i < data.list.length; i += 9) {
+        const day = data.list[i];
+        const date = new Date(day.dt_txt).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+        const description = day.weather[0].description;
+        const customIcon = getWeatherIcon(description);
 
-    let forecastHTML = `<h3>14-Day Forecast</h3>`;
-    days.slice(0, 14).forEach(day => {
-        const formattedDate = formatDate(day.datetime);
+        // Get precipitation percentage (default to 0 if undefined)
+        const precipitation = day.pop ? Math.round(day.pop * 100) : 0;
+
+        // Get wind speed (default to 0 if undefined)
+        const wind = day.wind ? day.wind.speed : 0;
+
+        // Get precipitation icon (based on temperature)
+        const percipitationIcon = getPrecipitationIcon(day.main.temp); 
+
         forecastHTML += `
-            <p><strong>${formattedDate}</strong>: ${day.temp}${tempUnit}, ${day.conditions} <img src="https://raw.githubusercontent.com/visualcrossing/WeatherIcons/main/PNG/1st%20Set%20-%20Color/${day.icon}.png" alt="Weather icon"></p>
+        <div id="daily" class="left">
+            <div>
+                <p><strong>${date}</strong>: ${day.main.temp}${tempUnit}, ${description}</p>
+                <div class="left">
+                    <p class="left" id="precipitation"><strong><img id="precipIcon" src="${percipitationIcon}"></strong> ${precipitation}%</p>
+                    <p2><strong>Wind:</strong> ${wind} ${windUnit}</p2>
+                </div>
+            </div>
+            <img id="dayIcon" src="${customIcon}" alt="${description}" />
+        </div>
         `;
-    });
+    }
 
     forecastContainer.innerHTML = forecastHTML;
 }
 
-// Get user location automatically
+
+
+
+// Change unit and refresh data
+function changeUnit(newUnit) {
+    unit = newUnit;
+    fetchWeatherAndAlerts();
+}
+
+function getCityName(latitude, longitude) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+        .then(response => response.json())
+        .then(data => {
+            userLocation = data.address.city || data.address.town || data.address.village || "Unknown location";
+            fetchWeatherAndAlerts();
+        })
+        .catch(error => {
+            console.error("Error getting city name:", error);
+            userLocation = "Virginia";
+            fetchWeatherAndAlerts();
+        });
+}
+
 function getLocation() {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             position => {
-                const latitude = position.coords.latitude;
-                const longitude = position.coords.longitude;
-                userLocation = `${latitude},${longitude}`;
-                fetchWeatherAndAlerts();
+                getCityName(position.coords.latitude, position.coords.longitude);
             },
             error => {
                 console.error("Geolocation error:", error);
@@ -143,11 +176,47 @@ function getLocation() {
     }
 }
 
-// Change unit and refresh data
-function changeUnit(newUnit) {
-    unit = newUnit;
-    fetchWeatherAndAlerts();
+function getWeatherIcon(description) {
+    const lowerDesc = description.toLowerCase();
+
+    if (lowerDesc.includes("thunderstorm")) return "animated/thunder.svg";
+    if (lowerDesc.includes("snow")) return "animated/snowy-6.svg";
+    if (lowerDesc.includes("drizzle")) return "animated/rainy-2.svg";
+    if (lowerDesc.includes("clear")) return "animated/day.svg";
+    if (lowerDesc.includes("clouds")) return "animated/cloudy.svg";
+    if (lowerDesc.includes("light rain")) return "animated/rainy-2.svg";
+    if (lowerDesc.includes("moderate rain")) return "animated/rainy-3.svg";
+    if (lowerDesc.includes("heavy intensity rain") || lowerDesc.includes("very heavy rain") || lowerDesc.includes("extreme rain")) return "animated/rainy-6.svg";
+    if (lowerDesc.includes("shower rain")) return "animated/rainy-7.svg";
+    if (lowerDesc.includes("freezing rain")) return "animated/snowy-6.svg";
+
+    return "animated/weather.svg"; // Fallback icon
 }
 
-// Fetch initial data on page load
+function getPrecipitationIcon(temp) {
+    const freezingPoint = unit === "imperial" ? 32 : 0; // 32°F or 0°C
+
+    if (temp <= freezingPoint) {
+        return "animated/snowy-6.svg";
+    } else {
+        return "animated/rainy-5.svg";
+    }
+}
+
+function switchTab(tabId) {
+    // Hide all tab contents
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => content.style.display = 'none');
+
+    // Show the selected tab content
+    document.getElementById(tabId).style.display = 'block';
+
+    // Remove active class from all buttons
+    const tabButtons = document.querySelectorAll('.bottom-tab button');
+    tabButtons.forEach(button => button.classList.remove('active'));
+
+    // Add active class to the clicked button
+    event.target.classList.add('active');
+}
+
 getLocation();
