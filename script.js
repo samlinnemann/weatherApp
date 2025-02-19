@@ -219,6 +219,36 @@ function switchTab(tabId) {
     event.target.classList.add('active');
 }
 
+function toggleFullscreen() {
+    if (!document.fullscreenElement &&    // Check if not in fullscreen mode
+        !document.mozFullScreenElement && // For Firefox
+        !document.webkitFullscreenElement && // For Chrome, Safari and Opera
+        !document.msFullscreenElement) { // For IE/Edge
+        // Request fullscreen
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+            document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari and Opera
+            document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+            document.documentElement.msRequestFullscreen();
+        }
+    } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) { // Firefox
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) { // Chrome, Safari and Opera
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { // IE/Edge
+            document.msExitFullscreen();
+        }
+    }
+}
+
+
 window.onload = () => {
     toggleFullscreen(); // Automatically trigger fullscreen
 };
