@@ -146,6 +146,6 @@ p2 {
 }
 
 .bottom-tab button:hover {
-    background-color: #163ca5;
-    color: white;
+    background-color: white;
+    color: #163ca5;
 }
