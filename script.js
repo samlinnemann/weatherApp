@@ -219,4 +219,9 @@ function switchTab(tabId) {
     event.target.classList.add('active');
 }
 
+window.onload = () => {
+    toggleFullscreen(); // Automatically trigger fullscreen
+};
+
+
 getLocation();
