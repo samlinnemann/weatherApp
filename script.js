@@ -28,7 +28,7 @@ function fetchWeatherAndAlerts() {
         .then(response => response.json())
         .then(data => {
             displayHourlyForecast(data);
-            display14DayForecast(data);
+            display5DayForecast(data);
         })
         .catch(err => console.error("Error fetching forecast data:", err));
 }
