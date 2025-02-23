@@ -68,7 +68,7 @@ function displayHourlyForecast(data) {
     let hourlyHTML = `<h1>Hourly Forecast</h1>`;
     
 
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 9; i++) {
         const hour = data.list[i];
         const date = new Date(hour.dt_txt);
         const time12 = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -97,8 +97,8 @@ function displayHourlyForecast(data) {
 }
 
 
-function display14DayForecast(data) {
-    const forecastContainer = document.getElementById("forecast-14day");
+function display5DayForecast(data) {
+    const forecastContainer = document.getElementById("forecast-5day");
     const tempUnit = unit === "imperial" ? "°F" : "°C";
     const windUnit = unit === "imperial" ? "mph" : "km/h"; // Define wind unit
 
