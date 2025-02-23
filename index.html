@@ -31,7 +31,7 @@
         </div>
     
         <div id="forecast-tab" class="tab-content" style="display: none;">
-            <div id="forecast-14day"></div>
+            <div id="forecast-5day"></div>
         </div>
     
         <div id="radar-tab" class="tab-content" style="display: none;">
@@ -41,9 +41,9 @@
     </div>
     
     <div id="bttmTab" class="bottom-tab">
-        <button class="tab-button" onclick="switchTab('weather-tab')">Current Weather</button>
-        <button class="tab-button" onclick="switchTab('forecast-tab')">5-Day Forecast</button>
-        <button class="tab-button" onclick="switchTab('radar-tab')">Radar</button>
+        <button class="tab-button" onclick="switchTab('weather-tab', event)">Current Weather</button>
+        <button class="tab-button" onclick="switchTab('forecast-tab', event)">5-Day Forecast</button>
+        <button class="tab-button" onclick="switchTab('radar-tab', event)">Radar</button>        
     </div>
 </body>    
 </html>

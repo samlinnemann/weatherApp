@@ -97,13 +97,13 @@ function displayHourlyForecast(data) {
 }
 
 
-function display5DayForecast(data) {
+function display5DayForecast(data, unit) {
     const forecastContainer = document.getElementById("forecast-5day");
     const tempUnit = unit === "imperial" ? "°F" : "°C";
     const windUnit = unit === "imperial" ? "mph" : "km/h"; // Define wind unit
 
     let forecastHTML = `<h1>5-Day Forecast</h1>`;
-    
+
     // Loop through data in 9-hour intervals (typically for every 3-hour forecast)
     for (let i = 0; i < data.list.length; i += 9) {
         const day = data.list[i];
@@ -201,7 +201,7 @@ function getPrecipitationIcon(temp) {
     }
 }
 
-function switchTab(tabId) {
+function switchTab(tabId, event) {
     // Hide all tab contents
     const tabContents = document.querySelectorAll('.tab-content');
     tabContents.forEach(content => content.style.display = 'none');
@@ -216,5 +216,6 @@ function switchTab(tabId) {
     // Add active class to the clicked button
     event.target.classList.add('active');
 }
+
 
 getLocation();
