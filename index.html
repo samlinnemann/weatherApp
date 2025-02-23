@@ -28,20 +28,22 @@
                 </div>
             </div>
             <div id="hourly-weather"></div>
-            <div id="radar-container" class="centered-content">
-                <h3>Weather Radar</h3>
-                <div id="map"></div>
-            </div>
         </div>
-
-        <div id="forecast-tab" class="tab-content">
+    
+        <div id="forecast-tab" class="tab-content" style="display: none;">
             <div id="forecast-14day"></div>
         </div>
+    
+        <div id="radar-tab" class="tab-content" style="display: none;">
+            <h1>Weather Radar</h1>
+            <div id="map"></div>
+        </div>
     </div>
-
+    
     <div id="bttmTab" class="bottom-tab">
-        <button id="tab" onclick="switchTab('weather-tab')">Current Weather</button>
-        <button id="tab" onclick="switchTab('forecast-tab')">5-Day Forecast</button>
+        <button class="tab-button" onclick="switchTab('weather-tab')">Current Weather</button>
+        <button class="tab-button" onclick="switchTab('forecast-tab')">5-Day Forecast</button>
+        <button class="tab-button" onclick="switchTab('radar-tab')">Radar</button>
     </div>
-</body>
+</body>    
 </html>

@@ -125,13 +125,14 @@ p2 {
     background-color: #163ca5;
     display: flex;
     justify-content: center;
-    gap: 45px;
+    gap: 35px;
     padding: 10px 0;
     z-index: 1000;
 }
 
 .bottom-tab button {
     padding: 10px 20px;
+    width: 100px;
     cursor: pointer;
     border: none;
     background-color: #3967e4;

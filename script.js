@@ -45,12 +45,13 @@ function displayWeather(data) {
     const windUnit = unit === "imperial" ? "mph" : "km/h";
     const description = data.weather[0].description;
     const customIcon = getWeatherIcon(description); // Get custom icon based on description
+    const roundedTemp = Math.round(data.main.temp);
 
     weatherContainer.innerHTML = `
         <h1>Weather in ${data.name}</h1>
         <img id="topIcon" src="${customIcon}" alt="${description}" />
         <div>
-            <h1>${data.main.temp}${tempUnit}</h1>
+            <h1>${roundedTemp}${tempUnit}</h1>
             <h2>${description}</h2>
         </div>
         <div class="rmiddle">
@@ -65,8 +66,9 @@ function displayHourlyForecast(data) {
     const tempUnit = unit === "imperial" ? "°F" : "°C";
     const windUnit = unit === "imperial" ? "mph" : "km/h";
     let hourlyHTML = `<h1>Hourly Forecast</h1>`;
+    
 
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 8; i++) {
         const hour = data.list[i];
         const date = new Date(hour.dt_txt);
         const time12 = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -75,11 +77,12 @@ function displayHourlyForecast(data) {
         const percipitationIcon = getPrecipitationIcon(hour.main.temp);
         const precipitation = hour.pop ? Math.round(hour.pop * 100) : 0;
         const wind = hour.wind ? hour.wind.speed : 0;
+        const roundedTemp = Math.round(hour.main.temp);
 
         hourlyHTML += `
         <div id="hourly" class="left">
             <div>
-                <p><strong>${time12}</strong>: ${hour.main.temp}${tempUnit}, ${description}</p>
+                <p><strong>${time12}</strong>: ${roundedTemp}${tempUnit}, ${description}</p>
                 <div class="left">
                     <p class="left" id="precipitation"><strong><img id="precipIcon" src="${percipitationIcon}"></strong> ${precipitation}%</p>
                     <p2><strong>Wind:</strong> ${wind} ${windUnit}</p2>
@@ -107,20 +110,15 @@ function display14DayForecast(data) {
         const date = new Date(day.dt_txt).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
         const description = day.weather[0].description;
         const customIcon = getWeatherIcon(description);
-
-        // Get precipitation percentage (default to 0 if undefined)
         const precipitation = day.pop ? Math.round(day.pop * 100) : 0;
-
-        // Get wind speed (default to 0 if undefined)
         const wind = day.wind ? day.wind.speed : 0;
-
-        // Get precipitation icon (based on temperature)
         const percipitationIcon = getPrecipitationIcon(day.main.temp); 
+        const roundedTemp = Math.round(day.main.temp);
 
         forecastHTML += `
         <div id="daily" class="left">
             <div>
-                <p><strong>${date}</strong>: ${day.main.temp}${tempUnit}, ${description}</p>
+                <p><strong>${date}</strong>: ${roundedTemp}${tempUnit}, ${description}</p>
                 <div class="left">
                     <p class="left" id="precipitation"><strong><img id="precipIcon" src="${percipitationIcon}"></strong> ${precipitation}%</p>
                     <p2><strong>Wind:</strong> ${wind} ${windUnit}</p2>
@@ -218,40 +216,5 @@ function switchTab(tabId) {
     // Add active class to the clicked button
     event.target.classList.add('active');
 }
-
-function toggleFullscreen() {
-    if (!document.fullscreenElement &&    // Check if not in fullscreen mode
-        !document.mozFullScreenElement && // For Firefox
-        !document.webkitFullscreenElement && // For Chrome, Safari and Opera
-        !document.msFullscreenElement) { // For IE/Edge
-        // Request fullscreen
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen();
-        } else if (document.documentElement.mozRequestFullScreen) { // Firefox
-            document.documentElement.mozRequestFullScreen();
-        } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari and Opera
-            document.documentElement.webkitRequestFullscreen();
-        } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
-            document.documentElement.msRequestFullscreen();
-        }
-    } else {
-        // Exit fullscreen
-        if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.mozCancelFullScreen) { // Firefox
-            document.mozCancelFullScreen();
-        } else if (document.webkitExitFullscreen) { // Chrome, Safari and Opera
-            document.webkitExitFullscreen();
-        } else if (document.msExitFullscreen) { // IE/Edge
-            document.msExitFullscreen();
-        }
-    }
-}
-
-
-window.onload = () => {
-    toggleFullscreen(); // Automatically trigger fullscreen
-};
-
 
 getLocation();
